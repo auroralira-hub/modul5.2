@@ -21,6 +21,42 @@ class InMemoryService {
       password: 'liralira',
       role: UserRole.student,
     ),
+    User(
+      username: 'budi',
+      name: 'Budi Santoso',
+      age: 21,
+      major: 'Teknik Informatika',
+      email: 'budi@kampus.id',
+      password: 'budi123',
+      role: UserRole.student,
+    ),
+    User(
+      username: 'siti',
+      name: 'Siti Aminah',
+      age: 23,
+      major: 'Psikologi',
+      email: 'siti@kampus.id',
+      password: 'siti123',
+      role: UserRole.student,
+    ),
+    User(
+      username: 'ahmad',
+      name: 'Ahmad Rizki',
+      age: 24,
+      major: 'Manajemen',
+      email: 'ahmad@kampus.id',
+      password: 'ahmad123',
+      role: UserRole.student,
+    ),
+    User(
+      username: 'dewile',
+      name: 'Dewi Lestari',
+      age: 22,
+      major: 'Ilmu Komunikasi',
+      email: 'dewi@kampus.id',
+      password: 'dewi123',
+      role: UserRole.student,
+    ),
   ];
 
   static final Map<String, List<JournalEntry>> _entries = {};

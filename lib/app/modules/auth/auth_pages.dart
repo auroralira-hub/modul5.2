@@ -725,10 +725,12 @@ class _RegisterPageState extends State<RegisterPage>
                               ),
                               keyboardType: TextInputType.number,
                               validator: (v) {
-                                if (v == null || v.trim().isEmpty)
+                                if (v == null || v.trim().isEmpty) {
                                   return 'Masukkan usia';
-                                if (int.tryParse(v) == null)
+                                }
+                                if (int.tryParse(v) == null) {
                                   return 'Usia tidak valid';
+                                }
                                 return null;
                               },
                             ),
