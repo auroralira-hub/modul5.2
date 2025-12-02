@@ -306,6 +306,10 @@ class _DailyJournalPageState extends State<DailyJournalPage>
                           child: TextField(
                             controller: _ctrl,
                             maxLines: 12,
+                            style: TextStyle(
+                              color: isDark ? Colors.white : Colors.black87,
+                            ),
+                            cursorColor: Color(0xFF7C3AED),
                             onChanged: (value) {
                               setState(() {
                                 final baseColor = value.length % 2 == 0

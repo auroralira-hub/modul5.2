@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' as supa;
 
 import '../../../data/models.dart';
 import '../../../services/supabase_services.dart';
+import '../../../services/session_service.dart';
+import '../../../routes/app_routes.dart';
 import '../../../widgets/theme_toggle_action.dart';
 
 class UserProfilePage extends StatefulWidget {
@@ -114,7 +117,14 @@ class _UserProfilePageState extends State<UserProfilePage> {
       appBar: AppBar(
         title: const Text('Profil Pengguna'),
         backgroundColor: Colors.indigo,
-        actions: const [ThemeToggleAction()],
+        actions: [
+          const ThemeToggleAction(),
+          IconButton(
+            tooltip: 'Logout',
+            icon: const Icon(Icons.logout),
+            onPressed: _confirmLogout,
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -219,4 +229,36 @@ class _UserProfilePageState extends State<UserProfilePage> {
       ],
     ),
   );
+
+  void _confirmLogout() {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Konfirmasi Logout'),
+        content: const Text('Apakah Anda yakin ingin keluar?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context); // close dialog
+              try {
+                await supa.Supabase.instance.client.auth.signOut();
+              } catch (_) {}
+              await SessionService.clear();
+              if (!mounted) return;
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                AppRoutes.login,
+                (route) => false,
+              );
+            },
+            child: const Text('Logout'),
+          ),
+        ],
+      ),
+    );
+  }
 }

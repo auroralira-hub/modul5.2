@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../data/models.dart';
-import '../pages/auth/auth_pages.dart';
-import '../pages/dosen/dosen_pages.dart';
-import '../pages/user/user_pages.dart';
+import '../modules/auth/auth_pages.dart';
+import '../modules/psikolog/psikolog_pages.dart';
+import '../modules/user/user_pages.dart';
 import 'app_routes.dart';
 
 class AppPages {
@@ -16,13 +16,19 @@ class AppPages {
       case AppRoutes.home:
         final user = settings.arguments;
         if (user is User) {
+          if (UserRole.isPsychologist(user.role)) {
+            return _materialRoute(
+              psikologHomePage(username: user.username),
+              settings,
+            );
+          }
           return _materialRoute(UserHomePage(user: user), settings);
         }
         return _materialRoute(const LoginPage(), settings);
-      case AppRoutes.dosenHome:
+      case AppRoutes.psikologHome:
         final username = settings.arguments;
         if (username is String) {
-          return _materialRoute(DosenHomePage(username: username), settings);
+          return _materialRoute(psikologHomePage(username: username), settings);
         }
         return _materialRoute(const LoginPage(), settings);
       default:

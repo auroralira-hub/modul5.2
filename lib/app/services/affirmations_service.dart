@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer' as developer;
 
 import 'package:dio/dio.dart';
 
@@ -21,6 +22,7 @@ class AffirmationsService {
     if (!hasNetwork) {
       return 'Affirmation tidak tersedia saat offline.';
     }
+    final stopwatch = Stopwatch()..start();
     try {
       print('🔄 Trying to fetch affirmation from API...');
       final response = await _dio.get('/');
@@ -29,6 +31,10 @@ class AffirmationsService {
         final affirmation = _extractAffirmation(response.data);
         if (affirmation != null && affirmation.isNotEmpty) {
           print('✅ Affirmation received from API: $affirmation');
+          developer.log(
+            'Affirmation berhasil dalam ${stopwatch.elapsedMilliseconds}ms',
+            name: 'AffirmationsService',
+          );
           return affirmation;
         }
       }
@@ -36,6 +42,12 @@ class AffirmationsService {
       print('⚠️ API failed via Dio, using offline affirmations: ${e.message}');
     } catch (e) {
       print('⚠️ API failed, using offline affirmations: $e');
+    } finally {
+      if (stopwatch.isRunning) stopwatch.stop();
+      developer.log(
+        'fetchAffirmation selesai dalam ${stopwatch.elapsedMilliseconds}ms',
+        name: 'AffirmationsService',
+      );
     }
 
     return 'Affirmation tidak tersedia (gagal memuat dari API).';
@@ -50,11 +62,17 @@ class AffirmationsService {
       onError?.call('Affirmation tidak tersedia saat offline.');
       return;
     }
+    final stopwatch = Stopwatch()..start();
     try {
       final response = await _dio.get('/');
       if (response.statusCode == 200) {
         final affirmation = _extractAffirmation(response.data);
         if (affirmation != null && affirmation.isNotEmpty) {
+          stopwatch.stop();
+          developer.log(
+            'fetchAffirmationWithCallback sukses dalam ${stopwatch.elapsedMilliseconds}ms',
+            name: 'AffirmationsService',
+          );
           onSuccess(affirmation);
           return;
         }
@@ -64,6 +82,12 @@ class AffirmationsService {
       onError?.call('Gagal memuat affirmation: ${e.message}');
     } catch (e) {
       onError?.call('Terjadi kesalahan: $e');
+    } finally {
+      if (stopwatch.isRunning) stopwatch.stop();
+      developer.log(
+        'fetchAffirmationWithCallback selesai dalam ${stopwatch.elapsedMilliseconds}ms',
+        name: 'AffirmationsService',
+      );
     }
   }
 

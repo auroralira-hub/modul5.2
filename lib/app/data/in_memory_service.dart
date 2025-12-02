@@ -5,11 +5,12 @@ class InMemoryService {
   static final List<User> _users = [
     User(
       username: 'Rofika',
-      name: 'Rofika (Dosen)',
+      name: 'Rofika (psikolog)',
       age: 40,
       major: 'Psikologi',
       email: 'rofika@univ.edu',
       password: 'rofika12',
+      role: UserRole.psychologist,
     ),
     User(
       username: 'lira',
@@ -18,6 +19,7 @@ class InMemoryService {
       major: 'Teknik Informatika',
       email: 'lira@example.com',
       password: 'liralira',
+      role: UserRole.student,
     ),
   ];
 

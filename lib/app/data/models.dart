@@ -8,6 +8,7 @@ class User {
   final String major;
   final String email;
   final String password;
+  final String role;
 
   User({
     this.supabaseUserId,
@@ -17,6 +18,7 @@ class User {
     required this.major,
     required this.email,
     required this.password,
+    this.role = UserRole.student,
   });
 
   User copyWith({
@@ -27,6 +29,7 @@ class User {
     String? major,
     String? email,
     String? password,
+    String? role,
   }) {
     return User(
       supabaseUserId: supabaseUserId ?? this.supabaseUserId,
@@ -36,6 +39,7 @@ class User {
       major: major ?? this.major,
       email: email ?? this.email,
       password: password ?? this.password,
+      role: role ?? this.role,
     );
   }
 
@@ -48,6 +52,7 @@ class User {
       'major': major,
       'email': email,
       'password': password,
+      'role': role,
     };
   }
 
@@ -60,6 +65,8 @@ class User {
       major: json['major'] as String? ?? '',
       email: json['email'] as String? ?? '',
       password: json['password'] as String? ?? '',
+      role: (json['role'] as String?)?.toLowerCase().trim() ??
+          UserRole.student,
     );
   }
 
@@ -105,6 +112,14 @@ class JournalEntry {
       timestamp:
           DateTime.tryParse(json['timestamp'] as String? ?? '') ??
           DateTime.now(),
-    );
-  }
+      );
+    }
+}
+
+class UserRole {
+  static const String student = 'mahasiswa';
+  static const String psychologist = 'psikolog';
+
+  static bool isPsychologist(String value) =>
+      value.toLowerCase().trim() == psychologist;
 }

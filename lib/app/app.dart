@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'core/navigation/app_route_observer.dart';
 import 'core/theme/theme_controller.dart';
 import 'data/models.dart';
-import 'pages/auth/auth_pages.dart';
-import 'pages/dosen/dosen_pages.dart';
-import 'pages/user/user_pages.dart';
+import 'modules/auth/auth_pages.dart';
+import 'modules/psikolog/psikolog_pages.dart';
+import 'modules/user/user_pages.dart';
 import 'routes/app_pages.dart';
 
 class MoodTrackerApp extends StatelessWidget {
@@ -52,8 +52,9 @@ class MoodTrackerApp extends StatelessWidget {
     if (initialUser == null) {
       return const LoginPage();
     }
-    if (initialUser!.username == 'Rofika') {
-      return DosenHomePage(username: initialUser!.username);
+    if (UserRole.isPsychologist(initialUser!.role) ||
+        initialUser!.username == 'Rofika') {
+      return psikologHomePage(username: initialUser!.username);
     }
     return UserHomePage(user: initialUser!);
   }

@@ -26,7 +26,7 @@ class SessionService {
     if (data == null) return null;
     try {
       if (data is Map) {
-        return User.fromJson(Map<String, dynamic>.from(data as Map));
+        return User.fromJson(Map<String, dynamic>.from(data));
       }
       if (data is String) {
         return User.fromJson(jsonDecode(data) as Map<String, dynamic>);

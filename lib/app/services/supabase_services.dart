@@ -9,12 +9,17 @@ class SupabaseProfileService {
 
   supa.SupabaseClient get _client => supa.Supabase.instance.client;
 
+  // Registers a new user in Supabase Auth and creates a corresponding profile row.
   Future<String> registerUser(User user) async {
     try {
       final authResponse = await _client.auth.signUp(
         email: user.email,
         password: user.password,
-        data: {'username': user.username, 'name': user.name},
+        data: {
+          'username': user.username,
+          'name': user.name,
+          'role': user.role,
+        },
       );
 
       final authUser = authResponse.user;
@@ -24,6 +29,7 @@ class SupabaseProfileService {
         );
       }
 
+      // Insert profile must satisfy RLS: auth.uid() = user_id
       await _client.from('profiles').insert({
         'user_id': authUser.id,
         'username': user.username,
@@ -34,6 +40,7 @@ class SupabaseProfileService {
         'avatar': '',
         'timestampz': DateTime.now().toIso8601String(),
       });
+
       return authUser.id;
     } on supa.AuthException catch (e) {
       throw SupabaseProfileServiceException(e.message);
@@ -47,36 +54,23 @@ class SupabaseProfileService {
     }
   }
 
+  // Logs in using email/password (required due to RLS policies), then fetches the profile.
   Future<User> loginUser({
-    required String username,
+    required String username, // expects email (RLS prevents pre-login profile lookup)
     required String password,
   }) async {
     try {
-      final dynamic profileData = await _client
-          .from('profiles')
-          .select('user_id, username, name, age, major, email')
-          .eq('username', username)
-          .maybeSingle();
+      final String identifier = username.trim();
+      final bool isEmail = identifier.contains('@');
 
-      final Map<String, dynamic>? profile = profileData == null
-          ? null
-          : Map<String, dynamic>.from(profileData as Map);
-
-      if (profile == null) {
+      if (!isEmail) {
         throw SupabaseProfileServiceException(
-          'Username tidak ditemukan di Supabase.',
-        );
-      }
-
-      final email = (profile['email'] as String?)?.trim();
-      if (email == null || email.isEmpty) {
-        throw SupabaseProfileServiceException(
-          'Akun ini tidak memiliki email terdaftar.',
+          'Silakan login menggunakan email terdaftar (bukan username).',
         );
       }
 
       final authResponse = await _client.auth.signInWithPassword(
-        email: email,
+        email: identifier,
         password: password,
       );
       final authUser = authResponse.user;
@@ -86,14 +80,30 @@ class SupabaseProfileService {
         );
       }
 
+      // After login, RLS allows selecting from profiles
+      Map<String, dynamic>? profile =
+          await _maybeFetchProfileByUserId(authUser.id);
+      profile ??= _profileFromMetadata(authUser.userMetadata, identifier);
+
+      if (profile == null) {
+        throw SupabaseProfileServiceException(
+          'Profil tidak ditemukan untuk akun ini.',
+        );
+      }
+
       return User(
         supabaseUserId: authUser.id,
-        username: (profile['username'] as String?) ?? username,
-        name: (profile['name'] as String?) ?? '',
+        username: (profile['username'] as String?) ??
+            (authUser.userMetadata?['username'] as String?) ??
+            identifier,
+        name: (profile['name'] as String?) ??
+            (authUser.userMetadata?['name'] as String?) ??
+            '',
         age: _toInt(profile['age']),
         major: (profile['major'] as String?) ?? '',
-        email: email,
+        email: identifier,
         password: password,
+        role: _extractRole(authUser.userMetadata, profile),
       );
     } on supa.AuthException catch (e) {
       throw SupabaseProfileServiceException(e.message);
@@ -168,6 +178,42 @@ class SupabaseProfileService {
     if (value is num) return value.toInt();
     if (value is String) return int.tryParse(value) ?? 0;
     return 0;
+  }
+
+  String _extractRole(Map<String, dynamic>? metadata, Map<String, dynamic> profile) {
+    final metaRole = metadata?['role'] as String?;
+    final profileRole = profile['role'] as String?;
+    return (metaRole ?? profileRole)?.toLowerCase().trim() ??
+        UserRole.student;
+  }
+
+  // Removed pre-login profile lookup due to RLS: selection requires authenticated user.
+
+  Future<Map<String, dynamic>?> _maybeFetchProfileByUserId(String userId) async {
+    final dynamic profileData = await _client
+      .from('profiles')
+      .select('user_id, username, name, age, major, email')
+        .eq('user_id', userId)
+        .maybeSingle();
+    return profileData == null
+        ? null
+        : Map<String, dynamic>.from(profileData as Map);
+  }
+
+  Map<String, dynamic>? _profileFromMetadata(
+    Map<String, dynamic>? metadata,
+    String email,
+  ) {
+    if (metadata == null) return null;
+    return {
+      'user_id': metadata['user_id'] ?? '',
+      'username': metadata['username'] ?? email,
+      'name': metadata['name'] ?? '',
+      'age': metadata['age'] ?? 0,
+      'major': metadata['major'] ?? '',
+      'email': email,
+      'role': metadata['role'] ?? UserRole.student,
+    };
   }
 }
 
